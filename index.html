@@ -2456,19 +2456,7 @@ function admin(){let a=apps();app.innerHTML=`${activeEventBarHtml()}${liveEventB
 
 
 
- let pca=document.getElementById("profileCompletionAdmin");if(pca)pca.onclick=profileCompletionAdminPage;
 
- let edd=document.getElementById("eventDayDashboard");if(edd)edd.onclick=eventDayDashboard;
-
- let pcount=document.getElementById("participantCountAdmin");if(pcount)pcount.onclick=participantCountAdminPage;
-
- let pdc=document.getElementById("participantDataCheck");if(pdc)pdc.onclick=participantDataCheckPage;
-
- let pefc=document.getElementById("preEventFinalCheck");if(pefc)pefc.onclick=preEventFinalCheckPage;
-
- let ooh=document.getElementById("openOperationsHub");if(ooh)ooh.onclick=organizerOperationsHub;
-
- bindActiveEventBar();
 
 function logActivity(action,detail){
  const a=currentAdmin?currentAdmin():null;
@@ -2946,6 +2934,19 @@ function lunchPage(){
 }
 
 function bind(){
+ let pca=document.getElementById("profileCompletionAdmin");if(pca)pca.onclick=profileCompletionAdminPage;
+
+ let edd=document.getElementById("eventDayDashboard");if(edd)edd.onclick=eventDayDashboard;
+
+ let pcount=document.getElementById("participantCountAdmin");if(pcount)pcount.onclick=participantCountAdminPage;
+
+ let pdc=document.getElementById("participantDataCheck");if(pdc)pdc.onclick=participantDataCheckPage;
+
+ let pefc=document.getElementById("preEventFinalCheck");if(pefc)pefc.onclick=preEventFinalCheckPage;
+
+ let ooh=document.getElementById("openOperationsHub");if(ooh)ooh.onclick=organizerOperationsHub;
+
+ bindActiveEventBar();
  let myAppBtn=document.getElementById("openMyApplication");if(myAppBtn)myAppBtn.onclick=myApplicationPage;
  let mde=document.getElementById("myDogsEdit");if(mde)mde.onclick=myPage;
  let p=document.getElementById("pick");if(p)p.onchange=()=>{eid=p.value;save();render()};
