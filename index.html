@@ -2496,7 +2496,34 @@ function adminLogout(){
 
 function adminLoginPage(){
  app.innerHTML=`<div class="card loginCard"><h3>🔐 管理者ログイン</h3><p class="muted">登録済み管理者はメールアドレスで、招待された方は招待コードで入れます。</p><label>メールアドレス</label><input id="loginEmail" type="email"><button class="btn primary" id="loginEmailBtn">登録済み管理者としてログイン</button><hr><label>招待コード</label><input id="loginCode" style="text-transform:uppercase"><button class="btn soft" id="loginCodeBtn">招待を受ける</button></div>`;
- document.getElementById("loginEmailBtn").onclick=()=>{const email=document.getElementById("loginEmail").value.trim().toLowerCase(),a=db.admins.find(x=>(x.email||"").toLowerCase()===email&&x.status==="active"&&x.enabled!==false);if(!a)return alert("有効な管理者が見つかりません");db.currentAdminId=a.id;save();alert(a.name+"さんでログインしました");go("admin")};
+ document.getElementById("loginEmailBtn").onclick=async()=>{
+ const email=document.getElementById("loginEmail").value.trim().toLowerCase();
+ if(!email)return alert("メールアドレスを入力してください");
+ const session=await cloudSessionInfo().catch(()=>null);
+ if(!session?.user?.email)return alert("先に右側の『管理者用クラウド接続』からSupabaseにログインしてください。メールアドレスだけでは管理者として認証できません。");
+ if(session.user.email.trim().toLowerCase()!==email)return alert("クラウドでログイン中のメールアドレスと一致しません。ログイン中のメールアドレスを入力してください。");
+ let a=(db.admins||[]).find(x=>(x.email||"").trim().toLowerCase()===email&&x.status==="active"&&x.enabled!==false);
+ if(!a){
+   // Only the authenticated owner recorded in Supabase may claim the legacy owner entry.
+   // Never grant admin privileges solely because an email was typed into the form.
+   try{
+     const client=initCloudClient();
+     if(!client)throw new Error("Supabase接続が未設定です");
+     const {data:identity,error:identityError}=await client.auth.getUser();
+     if(identityError||!identity?.user?.id||identity.user.email?.trim().toLowerCase()!==email)
+       throw new Error("Supabaseの本人確認ができませんでした");
+     const {data:members,error:memberError}=await client.from("event_members")
+       .select("event_id,user_id,role").eq("user_id",identity.user.id).eq("role","owner").limit(1);
+     if(memberError)throw memberError;
+     const legacy=(db.admins||[]).find(x=>x.id==="admin-main"&&x.role==="オーナー"&&x.enabled!==false&&!x.email);
+     if(members?.length&&legacy){
+       legacy.email=email;legacy.status="active";a=legacy;
+     }
+   }catch(err){console.warn("管理者照合:",err);alert("管理者権限の照合ができませんでした: "+(err.message||err));return;}
+ }
+ if(!a)return alert("Supabaseのオーナー登録と、このアプリの管理者登録が一致しません。管理者設定を確認してください。");
+ db.currentAdminId=a.id;save();alert(a.name+"さんでログインしました");go("admin");
+};
  document.getElementById("loginCodeBtn").onclick=()=>{const code=document.getElementById("loginCode").value.trim().toUpperCase(),a=db.admins.find(x=>x.inviteCode===code&&x.status==="pending");if(!a)return alert("有効な招待コードが見つかりません");a.status="active";a.inviteCode="";db.currentAdminId=a.id;logActivity("招待承認",a.name+" が管理メンバーになりました");save();alert("登録完了！ "+a.name+"さんでログインしました");go("admin")};
 }
 
