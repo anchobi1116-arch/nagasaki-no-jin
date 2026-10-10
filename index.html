@@ -3343,7 +3343,7 @@ function refreshSyncEventScope(){
  SyncAudit.add("sync-event-scope-changed",{eventId:now});
  setTimeout(()=>{try{updateReceptionSyncTimer()}catch(_){}},100);
 }
-setInterval(refreshSyncEventScope,1500);
+setInterval(refreshSyncEventScope,6000);
 
 
 function recordCurrentEventSyncState(){
@@ -3370,7 +3370,7 @@ function auditEventTransition(){
  nagasakiAuditEvent=now;
  SyncAudit.add("event-opened",{eventId:now});
 }
-setInterval(auditEventTransition,1500);
+setInterval(auditEventTransition,10000);
 
 
 setTimeout(()=>{
@@ -3390,7 +3390,7 @@ function notePastEventMode(){
    SyncAudit.add("past-event-opened",{eventId:m.eventId,archived:m.archived});
  }catch(_){}
 }
-setInterval(notePastEventMode,2000);
+setInterval(notePastEventMode,15000);
 setTimeout(notePastEventMode,300);
 
 
@@ -3403,7 +3403,7 @@ function noteFutureEventMode(){
    SyncAudit.add("future-event-opened",{eventId:m.eventId,lifecycle:m.lifecycle});
  }catch(_){}
 }
-setInterval(noteFutureEventMode,2000);
+setInterval(noteFutureEventMode,15000);
 setTimeout(noteFutureEventMode,350);
 
 
@@ -3433,7 +3433,7 @@ function refreshSyncLifecycleScope(){
    }
  }catch(_){}
 }
-setInterval(refreshSyncLifecycleScope,1500);
+setInterval(refreshSyncLifecycleScope,6000);
 setTimeout(refreshSyncLifecycleScope,250);
 
 
@@ -4195,7 +4195,7 @@ const NagasakiRecoveryCheckpoint={
 
 NagasakiRecoveryCheckpoint.recoverIfNeeded();
 NagasakiRecoveryCheckpoint.markRunning();
-setInterval(()=>NagasakiRecoveryCheckpoint.save("periodic"),15000);
+setInterval(()=>{if(document.visibilityState==="visible")NagasakiRecoveryCheckpoint.save("periodic")},60000);
 window.addEventListener("nagasaki:sync-queued",()=>NagasakiRecoveryCheckpoint.save("queued"));
 window.addEventListener("nagasaki:queue-flushed",()=>NagasakiRecoveryCheckpoint.save("flushed"));
 window.addEventListener("pagehide",()=>NagasakiRecoveryCheckpoint.markClean());
