@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/><title>長崎の陣｜正式10タブ統合テスト</title><style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;color:#152238;background:#f3f5f9}*{box-sizing:border-box}body{margin:0}header{background:#111827;color:#fff;padding:15px 18px}header strong{font-size:19px}header small{display:block;margin-top:5px;color:#d3dbe8}nav{position:sticky;top:0;z-index:3;display:flex;gap:7px;overflow:auto;background:#fff;padding:10px max(10px,calc((100vw - 960px)/2));border-bottom:1px solid #dfe3e8}nav button{white-space:nowrap;border:0;border-radius:11px;background:#edf1f6;color:#182338;padding:11px 14px;font-weight:700;cursor:pointer}nav button.active{background:#152338;color:white}main{max-width:960px;margin:18px auto;padding:0 12px}.box{background:white;border:1px solid #e2e7ee;border-radius:18px;padding:18px;margin-bottom:12px}.notice{background:#fff3d8;border-radius:12px;padding:13px;line-height:1.7}.sub{font-size:13px;color:#596b85;line-height:1.65}h2{margin:0 0 12px;font-size:21px}.pane{display:none}.pane.active{display:block}iframe{border:1px solid #dfe4ed;border-radius:15px;width:100%;height:900px;min-height:0;display:block;overflow:hidden;background:#fff}a{color:#1d4aa4} .btn{display:inline-block;background:#152338;color:white;text-decoration:none;border-radius:10px;padding:11px 14px;font-weight:700}.chip{display:inline-block;background:#eaf0f8;border-radius:8px;padding:8px 12px;margin:5px 3px 0 0;font-size:14px} @media(max-width:640px){header strong{font-size:17px}nav button{font-size:13px;padding:10px 11px}main{margin-top:10px}iframe{min-height:0}}
+
+/* Single vertical scroll owner: top-level document. Child frames get measured content heights. */
+html,body{min-height:100%;overflow-x:hidden;overflow-y:auto} nav{overscroll-behavior-x:contain} iframe{max-width:100%;}
+@media(max-width:640px){.box{padding:12px}main{padding:0 8px}}</style></head><body><header><strong>🐺 長崎の陣</strong><small>正式10タブ統合・スクロール改善テスト（本番アプリは変更なし）</small></header><nav aria-label="テスト画面の切り替え"><button aria-current="page" class="active" data-view="home" type="button">🏠 ホーム</button><button aria-current="false" data-view="roster" type="button">📋 参加名簿</button><button aria-current="false" data-view="profile" type="button">🐕 犬プロフィール</button><button aria-current="false" data-view="news" type="button">📢 お知らせ</button><button aria-current="false" data-view="notes" type="button">⚠️ 注意事項</button><button aria-current="false" data-view="lunch" type="button">🍱 ランチ</button><button aria-current="false" data-view="media" type="button">📸 写真・動画</button><button aria-current="false" data-view="lounge" type="button">💬 ハスキー談話室</button><button aria-current="false" data-view="organizer" type="button">👥 主催者</button><button aria-current="false" data-view="goods" type="button">🛍️ グッズ</button></nav><main>
+<section class="pane active" id="home"><div class="box"><h2>🏠 ホーム（統合テスト）</h2><p>長崎の陣アプリの入口を、初回登録とハスキー談話室につないだテスト画面だよ。</p><div class="notice"><b>🐾 犬の登録がまだの方へ</b><p>登録コードがなくてもアプリを閲覧できます。犬の登録が完了すると、談話室への投稿と対象犬のプロフィール編集ができるようになります。</p><button class="btn" data-go="register">犬の登録画面を開く →</button></div><h3>テスト中の機能</h3><span class="chip">メールログイン</span><span class="chip">犬の登録コード</span><span class="chip">談話室の閲覧と投稿制限</span><span class="chip">投稿名の自動表示</span><span class="chip">未読件数</span><p class="sub">※ このホームのお知らせは共通の案内です。ログイン中の犬登録状況に応じた表示の切り替えは、下の「犬の登録」画面で確認してね。</p></div></section>
+<section class="pane" id="register"><div class="box"><h2>🐾 自分の犬を登録</h2><p class="sub">これまでテストしてきた登録画面を、この中に表示するよ。「あとで登録する」も選べるよ。</p><iframe id="registrationFrame" loading="lazy" src="./husky-registration-flow-test-fixed.html" title="犬の初回登録"></iframe></div></section>
+<section class="pane" id="lounge"><div class="box"><h2>💬 ハスキー談話室</h2><p class="sub">閲覧はログイン後に利用可能。犬の登録が完了した人だけ投稿できるよ。新しいメッセージは下、自分の投稿は右側。</p><iframe id="loungeFrame" loading="lazy" src="./husky-lounge-registration-gate-test.html" title="ハスキー談話室"></iframe></div></section>
+<section class="pane" id="guide"><div class="box"><h2>ℹ️ このテストについて</h2><p>今回は新しいメニューから、既存の登録画面と談話室画面を行き来できるかを確認するテストだよ。</p><p>参加名簿・犬プロフィール・お知らせなどの本体画面との統合はまだ。今の各機能も本番ではなくテスト用ブランチにあるよ。</p><div class="notice">🔒 テストURLはVercel側のアクセス保護があるため、Vercelにログインしていないブラウザでは表示できない場合があるよ。</div><p class="sub">犬の登録コードやメール認証リンクはチャットやスクリーンショットに載せないでね。</p></div></section>
+<section class="pane" id="roster"><div class="box"><h2>📋 参加名簿</h2><div class="notice">🧩 統合待ち：この画面の既存機能はまだ接続していません。表示・操作内容は本番アプリから移植する前の仮画面です。</div></div></section><section class="pane" id="profile"><div class="box"><h2>🐕 犬プロフィール</h2><div class="notice">🧩 統合待ち：この画面の既存機能はまだ接続していません。表示・操作内容は本番アプリから移植する前の仮画面です。</div><p><button class="btn" data-go="register" type="button">テスト中の「犬の登録」を開く →</button></p></div></section><section class="pane" id="news"><div class="box"><h2>📢 お知らせ</h2><div class="notice">🧩 統合待ち：この画面の既存機能はまだ接続していません。表示・操作内容は本番アプリから移植する前の仮画面です。</div></div></section><section class="pane" id="notes"><div class="box"><h2>⚠️ 注意事項</h2><div class="notice">🧩 統合待ち：この画面の既存機能はまだ接続していません。表示・操作内容は本番アプリから移植する前の仮画面です。</div></div></section><section class="pane" id="lunch"><div class="box"><h2>🍱 ランチ</h2><div class="notice">🧩 統合待ち：この画面の既存機能はまだ接続していません。表示・操作内容は本番アプリから移植する前の仮画面です。</div></div></section><section class="pane" id="media"><div class="box"><h2>📸 写真・動画</h2><div class="notice">🧩 統合待ち：この画面の既存機能はまだ接続していません。表示・操作内容は本番アプリから移植する前の仮画面です。</div></div></section><section class="pane" id="organizer"><div class="box"><h2>👥 主催者</h2><div class="notice">🧩 統合待ち：この画面の既存機能はまだ接続していません。表示・操作内容は本番アプリから移植する前の仮画面です。</div></div></section><section class="pane" id="goods"><div class="box"><h2>🛍️ グッズ</h2><p>ハスキーグッズのショップはこちら。</p><a class="btn" href="https://huskyngskjp.base.shop/" rel="noopener noreferrer" target="_blank">グッズショップを開く ↗</a><p class="sub">外部サイト（BASE）を新しいタブで開きます。</p></div></section></main><script>
+const views=[...document.querySelectorAll('.pane')],buttons=[...document.querySelectorAll('nav button')];function switchView(name){if(!views.some(v=>v.id===name))name='home';for(const v of views)v.classList.toggle('active',v.id===name);for(const b of buttons){b.classList.toggle('active',b.dataset.view===name);b.setAttribute('aria-current',b.dataset.view===name?'page':'false')}history.replaceState(null,'','#'+name);window.scrollTo({top:0,behavior:'instant'});}for(const b of buttons)b.addEventListener('click',()=>switchView(b.dataset.view));for(const b of document.querySelectorAll('[data-go]'))b.addEventListener('click',()=>switchView(b.dataset.go));window.addEventListener('hashchange',()=>switchView(location.hash.slice(1)));if(location.hash)switchView(location.hash.slice(1));
+
+// Prevent nested scrolling for same-origin frames; preserve independent functionality.
+// This only adjusts layout; authentication, database and posting logic remain inside each test page.
+const frameObservers=new WeakMap();
+function fitFrame(frame){
+ try{
+  const doc=frame.contentDocument;
+  if(!doc||!doc.body||!doc.documentElement)return;
+  const root=doc.documentElement,body=doc.body;
+  root.style.setProperty('overflow-y','hidden','important');
+  body.style.setProperty('overflow-y','hidden','important');
+  const height=Math.max(body.scrollHeight,body.offsetHeight,root.scrollHeight,root.offsetHeight);
+  if(height>0)frame.style.height=Math.ceil(height+12)+'px';
+ }catch(e){frame.dataset.autosize='unavailable';}
+}
+for(const frame of document.querySelectorAll('iframe')){
+ frame.setAttribute('scrolling','no');
+ frame.addEventListener('load',()=>{
+  fitFrame(frame);
+  try{
+   const doc=frame.contentDocument;
+   if(!doc||frameObservers.has(frame))return;
+   const observer=new ResizeObserver(()=>fitFrame(frame));
+   observer.observe(doc.documentElement);observer.observe(doc.body);
+   frameObservers.set(frame,observer);
+  }catch(e){frame.dataset.autosize='unavailable';}
+ });
+}
+window.addEventListener('resize',()=>document.querySelectorAll('iframe').forEach(fitFrame));
+const oldSwitch=switchView;
+switchView=function(name){oldSwitch(name);const current=document.querySelector('.pane.active iframe');if(current)requestAnimationFrame(()=>fitFrame(current));};
+</script></body></html>
