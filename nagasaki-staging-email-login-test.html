@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>長崎の陣｜メールログイン検証</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#f3f5fa;color:#17233b;padding:20px}
+main{max-width:650px;margin:40px auto;background:white;padding:25px;border-radius:15px}
+input{box-sizing:border-box;width:100%;padding:12px;margin:10px 0}
+button{background:#17375f;color:white;border:0;border-radius:8px;padding:12px;margin:8px 5px 8px 0;cursor:pointer}
+button:disabled{opacity:.5}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f5fa;padding:14px;border-radius:8px}
+</style>
+</head>
+<body>
+<main>
+<h2>🐺 長崎の陣｜検証用メールログイン</h2>
+<p>Supabase検証環境専用。パスワードは使いません。</p>
+<label>Publishable key</label>
+<input id="key" type="password" placeholder="sb_publishable_..." autocomplete="off">
+<button id="connect">接続する</button>
+<hr>
+<label>ログインするメールアドレス</label>
+<input id="email" type="email" placeholder="メールアドレス" autocomplete="email">
+<button id="send" disabled>ログインメールを送る</button>
+<button id="check" disabled>ログイン状態を確認</button>
+<button id="logout" disabled>ログアウト</button>
+<pre id="status">まず検証用Publishable keyを入力してください。</pre>
+<p><small>認証リンク・確認コード・キーはチャットに送らないでください。</small></p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const BASE='https://kozuqolhhdonnaxfjevi.supabase.co';
+const status=document.getElementById('status');
+const key=document.getElementById('key');
+const email=document.getElementById('email');
+let client=null;
+function message(text){status.textContent=text;}
+async function showSession(){
+ if(!client)return;
+ const {data,error}=await client.auth.getUser();
+ if(error||!data.user){message('現在ログインしていません。');return;}
+ message('✅ ログイン成功\nユーザーID：'+data.user.id+'\n※このIDをチャットに送る必要はありません。');
+}
+document.getElementById('connect').onclick=async()=>{
+ const value=key.value.trim();
+ if(!value.startsWith('sb_publishable_')){
+  message('検証用Publishable keyを入力してください。');return;
+ }
+ if(!window.supabase){
+  message('Supabaseライブラリを読み込めませんでした。');return;
+ }
+ try{
+  client=window.supabase.createClient(BASE,value,{
+   auth:{persistSession:true,detectSessionInUrl:true,autoRefreshToken:true,flowType:'pkce'}
+  });
+  document.getElementById('send').disabled=false;
+  document.getElementById('check').disabled=false;
+  document.getElementById('logout').disabled=false;
+  key.value='';
+  message('✅ 接続準備完了。メールアドレスを入力してください。');
+  await showSession();
+ }catch(e){message('接続準備エラー：'+e.message);}
+};
+document.getElementById('send').onclick=async()=>{
+ if(!client)return;
+ if(!email.value.trim()){message('メールアドレスを入力してください。');return;}
+ const {error}=await client.auth.signInWithOtp({
+  email:email.value.trim(),
+  options:{
+   emailRedirectTo:location.origin+location.pathname,
+   shouldCreateUser:true
+  }
+ });
+ message(error?'送信エラー：'+error.message:'メール送信を受け付けました。受信メールのリンクを同じブラウザで開いてください。');
+};
+document.getElementById('check').onclick=showSession;
+document.getElementById('logout').onclick=async()=>{
+ if(!client)return;
+ const {error}=await client.auth.signOut();
+ message(error?'ログアウトエラー：'+error.message:'ログアウトしました。');
+};
+</script>
+</body>
+</html>
