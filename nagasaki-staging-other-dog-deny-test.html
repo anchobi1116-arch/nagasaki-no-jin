@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>長崎の陣｜他の犬の編集拒否テスト</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#f4f6f9;color:#222;margin:0;padding:20px}
+main{max-width:600px;margin:auto;background:white;padding:24px;border-radius:16px}
+h1{font-size:22px}
+label{display:block;margin-top:18px;font-weight:bold}
+input,button{box-sizing:border-box;width:100%;padding:13px;margin-top:8px;font-size:16px;border-radius:9px}
+input{border:1px solid #bbb}
+button{border:0;background:#174a78;color:white;font-weight:bold;cursor:pointer}
+button:disabled{background:#aaa;cursor:not-allowed}
+#status{white-space:pre-wrap;background:#eef2f6;padding:15px;border-radius:9px;line-height:1.7}
+.note{font-size:14px;color:#555}
+</style>
+</head>
+<body>
+<main>
+<h1>🐺 他の犬の編集拒否テスト</h1>
+<p class="note">検証用のみ。紐づいていない犬への編集が拒否されるか確認します。</p>
+
+<label for="key">検証用Publishable key</label>
+<input id="key" type="password" autocomplete="off" placeholder="sb_publishable_...">
+
+<button id="connect">① 接続・ログイン確認</button>
+<button id="test" disabled>② 他の犬の編集拒否テスト</button>
+
+<h2>テスト結果</h2>
+<div id="status">まだ接続していません。</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+'use strict';
+
+const PROJECT_URL =
+  'https://kozuqolhhdonnaxfjevi.supabase.co';
+
+const $ = id => document.getElementById(id);
+const report = text => $('status').textContent = text;
+
+let client = null;
+let targetId = null;
+let busy = false;
+
+function controls() {
+  $('connect').disabled = busy;
+  $('test').disabled = busy || !client || !targetId;
+}
+
+$('connect').addEventListener('click', async () => {
+  if (busy) return;
+  busy = true;
+  client = null;
+  targetId = null;
+  controls();
+
+  try {
+    const key = $('key').value.trim();
+
+    if (!key.startsWith('sb_publishable_')) {
+      throw new Error('検証用Publishable keyを入力してください。');
+    }
+
+    client = window.supabase.createClient(PROJECT_URL, key);
+
+    const { data: { user }, error: authError } =
+      await client.auth.getUser();
+
+    if (authError || !user) {
+      throw new Error('ログインを確認できません。');
+    }
+
+    const { data, error } =
+      await client.rpc('get_staging_public_dogs');
+
+    if (error) throw error;
+
+    const matches = (data || []).filter(
+      dog => dog.name === 'テストハスキー2'
+    );
+
+    if (matches.length !== 1) {
+      throw new Error('テストハスキー2が正確に1件見つかりません。');
+    }
+
+    const dog = matches[0];
+
+    if (
+      dog.residence_prefecture !== null ||
+      dog.instagram_handle !== null ||
+      dog.x_handle !== null
+    ) {
+      throw new Error('非公開状態を確認できません。');
+    }
+
+    targetId = dog.id;
+
+    report(
+      '✅ ログイン確認成功\n' +
+      '✅ テストハスキー2を取得\n' +
+      '✅ 居住地・SNSともに非公開\n\n' +
+      '次に②を押してください。'
+    );
+
+  } catch (e) {
+    client = null;
+    targetId = null;
+    report('❌ ' + (e.message || String(e)));
+  } finally {
+    busy = false;
+    controls();
+  }
+});
+
+$('test').addEventListener('click', async () => {
+  if (busy || !client || !targetId) return;
+
+  busy = true;
+  controls();
+
+  try {
+    const { data: { user }, error: authError } =
+      await client.auth.getUser();
+
+    if (authError || !user) {
+      throw new Error('ログイン状態を確認できません。');
+    }
+
+    // 非公開を維持する値で、編集権限だけをテスト
+    const { data, error } =
+      await client.rpc('update_staging_dog_visibility', {
+        p_dog_id: targetId,
+        p_residence_public: false,
+        p_sns_public: false
+      });
+
+    if (error) throw error;
+
+    if (data !== false) {
+      throw new Error(
+        '編集RPCが拒否されませんでした。結果：' +
+        JSON.stringify(data)
+      );
+    }
+
+    const { data: dogs, error: readError } =
+      await client.rpc('get_staging_public_dogs');
+
+    if (readError) throw readError;
+
+    const dog = (dogs || []).find(d => d.id === targetId);
+
+    if (!dog) {
+      throw new Error('テスト後に犬を確認できません。');
+    }
+
+    if (
+      dog.residence_prefecture !== null ||
+      dog.instagram_handle !== null ||
+      dog.x_handle !== null
+    ) {
+      throw new Error('非公開状態を確認できません。');
+    }
+
+    report(
+      '🎉 編集RPCが false を返しました\n' +
+      '✅ 他の犬への編集が拒否されました\n' +
+      '✅ テスト後も居住地・SNSは非公開\n\n' +
+      'テスト完了！'
+    );
+
+  } catch (e) {
+    report('❌ ' + (e.message || String(e)));
+  } finally {
+    busy = false;
+    controls();
+  }
+});
+</script>
+</body>
+</html>
