@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>長崎の陣｜iPhoneメールログイン修正版</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;padding:20px;
+  font-family:system-ui,-apple-system,sans-serif;
+  background:#f3f5fa;color:#17233b
+}
+main{
+  max-width:650px;margin:30px auto;
+  background:white;padding:24px;
+  border-radius:16px
+}
+h2{line-height:1.5}
+label{display:block;font-weight:700;margin-top:20px}
+input{
+  display:block;width:100%;font-size:16px;
+  padding:13px;margin:10px 0;
+  border:1px solid #cbd5e1;border-radius:9px
+}
+button{
+  background:#17375f;color:white;border:0;
+  border-radius:9px;padding:13px 16px;
+  margin:7px 5px 7px 0;
+  font-size:15px;cursor:pointer
+}
+button:disabled{opacity:.5;cursor:not-allowed}
+#status{
+  white-space:pre-wrap;overflow-wrap:anywhere;
+  padding:16px;background:#eef2f8;
+  border-radius:10px;line-height:1.8
+}
+small{color:#596779;line-height:1.8}
+</style>
+</head>
+<body>
+<main>
+<h2>🐺 長崎の陣｜検証用メールログイン</h2>
+<p>iPhone対応・認証リンク自動処理テスト</p>
+
+<label for="key">検証用Publishable key</label>
+<input id="key" type="password"
+  autocomplete="off"
+  placeholder="sb_publishable_...">
+<button id="connect">接続する</button>
+
+<hr>
+
+<label for="email">ログインするメールアドレス</label>
+<input id="email" type="email"
+  autocomplete="email"
+  placeholder="メールアドレス">
+
+<button id="send" disabled>ログインメールを送る</button>
+<button id="check" disabled>ログイン状態を確認</button>
+<button id="logout" disabled>ログアウト</button>
+
+<h3>ログイン結果</h3>
+<div id="status" role="status" aria-live="polite">
+接続を準備しています…
+</div>
+
+<p><small>
+認証メールのリンクは、ログインメールを送ったときと
+同じSafariで開いてください。
+認証リンクや確認コードはチャットに送らないでください。
+</small></p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+'use strict';
+
+const BASE = 'https://kozuqolhhdonnaxfjevi.supabase.co';
+const KEY_NAME = 'nagasaki_staging_public_key';
+
+const $ = id => document.getElementById(id);
+let client = null;
+let busy = false;
+
+function message(text){
+  $('status').textContent = text;
+}
+
+function controls(){
+  $('connect').disabled = busy;
+  $('send').disabled = busy || !client;
+  $('check').disabled = busy || !client;
+  $('logout').disabled = busy || !client;
+}
+
+function makeClient(key){
+  if(!window.supabase)
+    throw new Error('Supabaseライブラリを読み込めません。');
+
+  client = window.supabase.createClient(BASE,key,{
+    auth:{
+      persistSession:true,
+      autoRefreshToken:true,
+      detectSessionInUrl:false,
+      flowType:'pkce'
+    }
+  });
+}
+
+async function showSession(){
+  const {data,error} = await client.auth.getUser();
+
+  if(error || !data.user){
+    message('現在ログインしていません。');
+    return false;
+  }
+
+  message('✅ ログイン成功！（メール認証済み）');
+  return true;
+}
+
+async function completeCallback(){
+  const url = new URL(window.location.href);
+  const code = url.searchParams.get('code');
+  const authError =
+    url.searchParams.get('error_description') ||
+    url.searchParams.get('error');
+
+  if(authError){
+    history.replaceState(null,'',url.pathname);
+    throw new Error('認証リンクのエラー：'+authError);
+  }
+
+  if(!code)return false;
+
+  message('認証リンクを確認しました。\nログイン処理中…');
+
+  // 認証コードをURLから消して再利用を防ぐ
+  history.replaceState(null,'',url.pathname);
+
+  const {error} =
+    await client.auth.exchangeCodeForSession(code);
+
+  if(error){
+    throw new Error(
+      '認証コードの交換に失敗しました：' +
+      error.message +
+      '\n\nメールを送ったSafariと、リンクを開いたブラウザが同じか確認してください。'
+    );
+  }
+
+  await showSession();
+  return true;
+}
+
+async function connect(key){
+  if(!key.startsWith('sb_publishable_')){
+    throw new Error('検証用Publishable keyを入力してください。');
+  }
+
+  makeClient(key);
+
+  // このキーは公開用キー。秘密鍵は保存しない
+  localStorage.setItem(KEY_NAME,key);
+  $('key').value = '';
+
+  controls();
+
+  const handled = await completeCallback();
+  if(!handled)await showSession();
+}
+
+$('connect').addEventListener('click',async()=>{
+  if(busy)return;
+  busy = true;
+  controls();
+
+  try{
+    await connect($('key').value.trim());
+  }catch(e){
+    message('❌ '+(e.message||String(e)));
+  }finally{
+    busy = false;
+    controls();
+  }
+});
+
+$('send').addEventListener('click',async()=>{
+  if(!client || busy)return;
+  const address = $('email').value.trim();
+
+  if(!address){
+    message('メールアドレスを入力してください。');
+    return;
+  }
+
+  busy = true;
+  controls();
+
+  try{
+    const {error} = await client.auth.signInWithOtp({
+      email:address,
+      options:{
+        emailRedirectTo:
+          location.origin + location.pathname,
+        shouldCreateUser:false
+      }
+    });
+
+    if(error)throw error;
+
+    message(
+      '✅ ログインメールを送信しました。\n' +
+      '同じSafariで認証リンクを開いてください。'
+    );
+  }catch(e){
+    message('❌ メール送信エラー：'+e.message);
+  }finally{
+    busy = false;
+    controls();
+  }
+});
+
+$('check').addEventListener('click',async()=>{
+  if(!client || busy)return;
+  busy = true;
+  controls();
+  try{
+    await showSession();
+  }catch(e){
+    message('❌ '+e.message);
+  }finally{
+    busy = false;
+    controls();
+  }
+});
+
+$('logout').addEventListener('click',async()=>{
+  if(!client || busy)return;
+  busy = true;
+  controls();
+
+  try{
+    const {error} = await client.auth.signOut();
+    if(error)throw error;
+    message('ログアウトしました。');
+  }catch(e){
+    message('❌ '+e.message);
+  }finally{
+    busy = false;
+    controls();
+  }
+});
+
+window.addEventListener('DOMContentLoaded',async()=>{
+  busy = true;
+  controls();
+
+  try{
+    const key = localStorage.getItem(KEY_NAME);
+
+    if(!key){
+      message(
+        '検証用Publishable keyを入力して、接続してください。'
+      );
+      return;
+    }
+
+    await connect(key);
+  }catch(e){
+    message('❌ '+(e.message||String(e)));
+  }finally{
+    busy = false;
+    controls();
+  }
+});
+</script>
+</body>
+</html>
