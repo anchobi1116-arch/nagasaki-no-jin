@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>長崎の陣｜犬プロフィール公開設定テスト</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f5f9;color:#152238;font-family:system-ui,-apple-system,sans-serif}
+header{background:#111827;color:white;padding:17px}
+header strong{font-size:20px}
+header small{display:block;margin-top:5px;color:#cbd5e1}
+main{max-width:930px;margin:20px auto;padding:0 12px}
+.card{background:white;border:1px solid #e2e7ee;border-radius:20px;overflow:hidden;margin-bottom:14px}
+.setup{padding:20px}
+h2{margin:0 0 14px;font-size:21px}
+label{font-weight:700;display:block;margin-bottom:6px}
+input[type=password]{width:100%;padding:12px;border:1px solid #b8c5d3;border-radius:10px;font-size:16px}
+button{padding:12px 16px;border:0;border-radius:10px;background:#19283e;color:white;font-weight:700;font-size:15px;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+#message{white-space:pre-wrap;line-height:1.7;font-size:14px;margin-top:14px}
+.profile{display:grid;grid-template-columns:1fr 1.1fr}
+.photos{background:linear-gradient(155deg,#edf2fa,#f9eefa);padding:18px}
+.photo-screen{aspect-ratio:4/4.3;background:#e6eaf4;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.photo-screen .emoji{font-size:96px}
+.photo-screen p{font-size:14px;color:#536177;text-align:center;padding:0 14px}
+.photo-note{text-align:center;color:#59677b;font-size:13px;margin-top:12px}
+.info{padding:24px}
+.info h2{font-size:29px;margin:5px 0}
+.tag{display:inline-block;background:#f0e8fd;color:#54427a;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.field{background:#f7f8fb;border-radius:13px;padding:12px;min-width:0}
+.field span{display:block;color:#667085;font-size:12px;margin-bottom:7px}
+.field strong{font-size:15px;overflow-wrap:anywhere}
+.section{margin-top:22px;border-top:1px solid #e5e7eb;padding-top:18px}
+.section h3{font-size:17px;margin:0 0 12px}
+.setting{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:15px 0}
+.setting small{display:block;color:#64748b;margin-top:4px}
+.switch{position:relative;width:55px;height:32px;flex-shrink:0}
+.switch input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.switch span{display:block;width:55px;height:32px;background:#94a3b8;border-radius:20px;transition:.2s}
+.switch span:after{content:"";position:absolute;left:4px;top:4px;width:24px;height:24px;background:white;border-radius:50%;transition:.2s}
+.switch input:checked+span{background:#2563eb}
+.switch input:checked+span:after{transform:translateX(23px)}
+.switch input:disabled{cursor:not-allowed}
+.switch input:focus-visible+span{outline:3px solid #93c5fd;outline-offset:3px}
+.note{font-size:13px;color:#64748b;line-height:1.7}
+#save{width:100%;margin-top:10px;background:#174a78}
+[hidden]{display:none!important}
+@media(max-width:700px){
+.profile{grid-template-columns:1fr}
+.photos{padding:12px}
+.photo-screen{aspect-ratio:1/.85}
+.info{padding:18px}
+.info h2{font-size:25px}
+}
+@media(max-width:370px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<strong>🐺 長崎の陣</strong>
+<small>犬プロフィール・公開設定接続テスト（検証用）</small>
+</header>
+<main>
+<section class="card setup">
+<h2>🔑 検証用Supabaseに接続</h2>
+<label for="key">検証用 Publishable key</label>
+<input type="password" id="key" autocomplete="off"
+placeholder="sb_publishable_...">
+<p><button id="connect">接続・プロフィール表示</button></p>
+<div id="message" role="status">まだ接続していません。</div>
+</section>
+
+<section class="card" id="profileCard" hidden>
+<div class="profile">
+<div class="photos">
+<div class="photo-screen">
+<div class="emoji">🐺</div>
+<p>犬の写真</p>
+</div>
+<div class="photo-note">
+写真表示・追加・削除は今後接続予定
+</div>
+</div>
+
+<div class="info">
+<span class="tag">🐾 犬プロフィール</span>
+<h2 id="dogName">―</h2>
+<p class="note" id="breed">―</p>
+
+<div class="grid">
+<div class="field">
+<span>犬種</span>
+<strong id="breedField">―</strong>
+</div>
+<div class="field">
+<span>🏠 居住地</span>
+<strong id="residence">―</strong>
+</div>
+<div class="field">
+<span>Instagram</span>
+<strong id="instagram">―</strong>
+</div>
+<div class="field">
+<span>X</span>
+<strong id="xAccount">―</strong>
+</div>
+</div>
+
+<div class="section">
+<h3>🔒 居住地・SNSの公開設定</h3>
+<p id="permission" class="note"></p>
+
+<div id="editor" hidden>
+<div class="setting">
+<div>
+<strong>🏠 居住地を公開</strong>
+<small id="residenceState">非公開</small>
+</div>
+<label class="switch">
+<input type="checkbox" id="residenceSwitch"
+aria-label="居住地を公開">
+<span></span>
+</label>
+</div>
+
+<div class="setting">
+<div>
+<strong>📱 SNSを公開</strong>
+<small id="snsState">非公開</small>
+</div>
+<label class="switch">
+<input type="checkbox" id="snsSwitch"
+aria-label="InstagramとXを公開">
+<span></span>
+</label>
+</div>
+
+<p class="note">
+InstagramとXの公開設定は共通です。
+変更は「公開設定を保存」で反映されます。
+</p>
+<button id="save">公開設定を保存</button>
+</div>
+</div>
+
+<div class="section">
+<h3>🐾 参加履歴・同居犬</h3>
+<p class="note">
+既存の写真付きプロフィールから今後統合します。
+今回のテストでは表示しません。
+</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+'use strict';
+
+const URL_STAGING =
+ 'https://kozuqolhhdonnaxfjevi.supabase.co';
+const $ = id => document.getElementById(id);
+
+let client = null;
+let dogId = null;
+let canEdit = false;
+let busy = false;
+let original = null;
+
+function status(text){
+ $('message').textContent = text;
+}
+
+function updateControls(){
+ $('connect').disabled = busy;
+ $('save').disabled = busy || !canEdit;
+ $('residenceSwitch').disabled = busy || !canEdit;
+ $('snsSwitch').disabled = busy || !canEdit;
+}
+
+function updateLabels(){
+ $('residenceState').textContent =
+  $('residenceSwitch').checked ? '公開' : '非公開';
+ $('snsState').textContent =
+  $('snsSwitch').checked ? '公開' : '非公開';
+}
+
+$('residenceSwitch').addEventListener('change',updateLabels);
+$('snsSwitch').addEventListener('change',updateLabels);
+
+async function loadPublic(){
+ const {data,error} =
+  await client.rpc('get_staging_public_dogs');
+ if(error)throw error;
+
+ const matches = (data||[]).filter(
+  d => d.name === 'テストハスキー'
+ );
+ if(matches.length !== 1)
+  throw new Error('テストハスキーが1件見つかりません。');
+
+ const dog = matches[0];
+ dogId = dog.id;
+
+ $('dogName').textContent = dog.name;
+ $('breed').textContent = dog.breed || '';
+ $('breedField').textContent = dog.breed || '未登録';
+ $('residence').textContent =
+  dog.residence_prefecture || '非公開・未登録';
+ $('instagram').textContent =
+  dog.instagram_handle ? '@'+dog.instagram_handle : '非公開・未登録';
+ $('xAccount').textContent =
+  dog.x_handle ? '@'+dog.x_handle : '非公開・未登録';
+}
+
+async function loadPrivate(){
+ const {data,error} =
+  await client.rpc('get_staging_my_dog_visibility',{
+   p_dog_id:dogId
+  });
+ if(error)throw error;
+
+ const rows = data || [];
+ if(rows.length > 1)
+  throw new Error('公開設定の取得結果が不正です。');
+
+ if(rows.length === 0){
+  canEdit = false;
+  $('editor').hidden = true;
+  $('permission').textContent =
+   '閲覧専用：この犬の編集権限はありません。';
+  return;
+ }
+
+ canEdit = true;
+ original = {
+  residence:rows[0].residence_public,
+  sns:rows[0].sns_public
+ };
+
+ $('residenceSwitch').checked = original.residence;
+ $('snsSwitch').checked = original.sns;
+ updateLabels();
+ $('editor').hidden = false;
+ $('permission').textContent =
+  '✅ 承認済み家族・管理者として編集できます。';
+}
+
+$('connect').addEventListener('click',async()=>{
+ if(busy)return;
+ busy = true;
+ canEdit = false;
+ dogId = null;
+ original = null;
+ $('profileCard').hidden = true;
+ $('editor').hidden = true;
+ updateControls();
+
+ try{
+  const key = $('key').value.trim();
+  if(!key.startsWith('sb_publishable_'))
+   throw new Error('検証用Publishable keyを入力してください。');
+
+  if(!window.supabase)
+   throw new Error('Supabaseライブラリを読み込めません。');
+
+  client = window.supabase.createClient(URL_STAGING,key);
+
+  const {data:{user},error} = await client.auth.getUser();
+  if(error || !user)
+   throw new Error('ログインを確認できません。先にメールログインしてください。');
+
+  await loadPublic();
+  await loadPrivate();
+
+  $('profileCard').hidden = false;
+  status('✅ ログイン確認成功\n✅ プロフィール読み込み成功\n'
+    +(canEdit?'✅ 編集権限あり':'ℹ️ 閲覧専用'));
+ }catch(e){
+  status('❌ '+(e.message||String(e)));
+ }finally{
+  busy = false;
+  updateControls();
+ }
+});
+
+$('save').addEventListener('click',async()=>{
+ if(busy || !canEdit || !dogId)return;
+ busy = true;
+ updateControls();
+
+ try{
+  const residence = $('residenceSwitch').checked;
+  const sns = $('snsSwitch').checked;
+
+  const {data:{user},error:authError} =
+   await client.auth.getUser();
+  if(authError || !user)
+   throw new Error('ログインを確認できません。');
+
+  const {data,error} =
+   await client.rpc('update_staging_dog_visibility',{
+    p_dog_id:dogId,
+    p_residence_public:residence,
+    p_sns_public:sns
+   });
+
+  if(error)throw error;
+  if(data !== true)
+   throw new Error('編集が拒否されました。');
+
+  await loadPublic();
+  await loadPrivate();
+
+  if(
+   $('residenceSwitch').checked !== residence ||
+   $('snsSwitch').checked !== sns
+  ){
+   throw new Error('保存結果が一致しません。');
+  }
+
+  status('🎉 公開設定を保存しました！\n'
+    +'居住地：'+(residence?'公開':'非公開')+'\n'
+    +'SNS：'+(sns?'公開':'非公開'));
+ }catch(e){
+  status('❌ '+(e.message||String(e)));
+ }finally{
+  busy = false;
+  updateControls();
+ }
+});
+</script>
+</body>
+</html>
